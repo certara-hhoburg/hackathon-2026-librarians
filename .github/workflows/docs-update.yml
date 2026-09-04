@@ -1,0 +1,99 @@
+name: Docs update check
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - 'src/**'
+      - 'next.config.ts'
+      - 'package.json'
+      - '.env.example'
+      - 'src/payload.config.ts'
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  docs-update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+        env:
+          NPM_CONFIG_REGISTRY: https://registry.npmjs.org
+
+      - name: Build docs-update artifacts
+        id: docs
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_MODEL: ${{ vars.OPENAI_MODEL || 'gpt-4o-mini' }}
+          CI: true
+        run: |
+          ARGS=(--base "origin/${{ github.base_ref }}")
+          if [ -n "$OPENAI_API_KEY" ]; then
+            ARGS+=(--apply)
+            echo "mode=apply" >> "$GITHUB_OUTPUT"
+          else
+            echo "mode=prompt" >> "$GITHUB_OUTPUT"
+          fi
+          npm run docs:update -- "${ARGS[@]}"
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: docs-update-output
+          path: docs-update-output/
+          if-no-files-found: warn
+
+      - name: Comment on PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs')
+            const path = 'docs-update-output/comment.md'
+            if (!fs.existsSync(path)) {
+              core.warning('comment.md missing; skipping PR comment')
+              return
+            }
+            const body = fs.readFileSync(path, 'utf8')
+            const marker = '<!-- docs-update-bot -->'
+            const { owner, repo } = context.repo
+            const issue_number = context.issue.number
+
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner,
+              repo,
+              issue_number,
+              per_page: 100,
+            })
+            const existing = comments.find((c) => c.body && c.body.includes(marker))
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner,
+                repo,
+                comment_id: existing.id,
+                body,
+              })
+              core.info(`Updated comment ${existing.id}`)
+            } else {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number,
+                body,
+              })
+              core.info('Created docs-update comment')
+            }
