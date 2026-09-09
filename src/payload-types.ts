@@ -69,6 +69,9 @@ export interface Config {
   collections: {
     users: User;
     media: Media;
+    folders: Folder;
+    categories: Category;
+    tags: Tag;
     posts: Post;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
@@ -79,6 +82,9 @@ export interface Config {
   collectionsSelect: {
     users: UsersSelect<false> | UsersSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
+    folders: FoldersSelect<false> | FoldersSelect<true>;
+    categories: CategoriesSelect<false> | CategoriesSelect<true>;
+    tags: TagsSelect<false> | TagsSelect<true>;
     posts: PostsSelect<false> | PostsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
@@ -120,11 +126,21 @@ export interface UserAuthOperations {
   };
 }
 /**
+ * Admins can invite users and manage roles. Editors can only edit their own profile.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users".
  */
 export interface User {
   id: number;
+  /**
+   * Display name shown as the author on posts you edit. Falls back to email if empty.
+   */
+  name?: string | null;
+  /**
+   * Admin: manage users, categories, tags, media. Editor: create posts and folders only. Only admins can change this.
+   */
+  role: 'admin' | 'editor';
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -164,12 +180,77 @@ export interface Media {
   focalY?: number | null;
 }
 /**
+ * Nested folders for organizing documentation in the public sidebar.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "folders".
+ */
+export interface Folder {
+  id: number;
+  name: string;
+  slug: string;
+  /**
+   * Leave empty for a top-level folder. Nest by choosing a parent.
+   */
+  parent?: (number | null) | Folder;
+  /**
+   * Lower numbers appear first among siblings.
+   */
+  sortOrder?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * High-level buckets such as Technical or Recipe. Recipes are short how-tos that other guides can embed.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "categories".
+ */
+export interface Category {
+  id: number;
+  name: string;
+  slug: string;
+  description?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "tags".
+ */
+export interface Tag {
+  id: number;
+  name: string;
+  slug: string;
+  description?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "posts".
  */
 export interface Post {
   id: number;
   title: string;
+  slug: string;
+  /**
+   * Short blurb shown in listings and recipe embed cards.
+   */
+  summary?: string | null;
+  /**
+   * Optional nested folder for the public left navigation.
+   */
+  folder?: (number | null) | Folder;
+  /**
+   * e.g. Technical or Recipe
+   */
+  category?: (number | null) | Category;
+  tags?: (number | Tag)[] | null;
+  /**
+   * Order within a folder (lower first).
+   */
+  sortOrder?: number | null;
   content?: {
     root: {
       type: string;
@@ -185,7 +266,15 @@ export interface Post {
     };
     [k: string]: unknown;
   } | null;
+  /**
+   * Recipes / guides this page depends on. Shown as related how-tos below the article (in addition to any inline embeds).
+   */
+  includes?: (number | Post)[] | null;
   status: 'draft' | 'published';
+  /**
+   * Automatically set to the user who last saved this post.
+   */
+  lastEditedBy?: (number | null) | User;
   updatedAt: string;
   createdAt: string;
 }
@@ -220,6 +309,18 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'media';
         value: number | Media;
+      } | null)
+    | ({
+        relationTo: 'folders';
+        value: number | Folder;
+      } | null)
+    | ({
+        relationTo: 'categories';
+        value: number | Category;
+      } | null)
+    | ({
+        relationTo: 'tags';
+        value: number | Tag;
       } | null)
     | ({
         relationTo: 'posts';
@@ -272,6 +373,8 @@ export interface PayloadMigration {
  * via the `definition` "users_select".
  */
 export interface UsersSelect<T extends boolean = true> {
+  name?: T;
+  role?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;
@@ -309,12 +412,54 @@ export interface MediaSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "folders_select".
+ */
+export interface FoldersSelect<T extends boolean = true> {
+  name?: T;
+  slug?: T;
+  parent?: T;
+  sortOrder?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "categories_select".
+ */
+export interface CategoriesSelect<T extends boolean = true> {
+  name?: T;
+  slug?: T;
+  description?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "tags_select".
+ */
+export interface TagsSelect<T extends boolean = true> {
+  name?: T;
+  slug?: T;
+  description?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "posts_select".
  */
 export interface PostsSelect<T extends boolean = true> {
   title?: T;
+  slug?: T;
+  summary?: T;
+  folder?: T;
+  category?: T;
+  tags?: T;
+  sortOrder?: T;
   content?: T;
+  includes?: T;
   status?: T;
+  lastEditedBy?: T;
   updatedAt?: T;
   createdAt?: T;
 }

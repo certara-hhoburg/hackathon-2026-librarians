@@ -1,61 +1,90 @@
-import { headers as getHeaders } from 'next/headers.js'
+import type { Where } from 'payload'
+import Link from 'next/link'
 import { getPayload } from 'payload'
 import React from 'react'
 
 import config from '@/payload.config'
-import './styles.css'
 
-export default async function HomePage() {
-  const headers = await getHeaders()
-  const payloadConfig = await config
-  const payload = await getPayload({ config: payloadConfig })
-  const { user } = await payload.auth({ headers })
+type SearchParams = Promise<{ tag?: string; category?: string; folder?: string }>
+
+export default async function HomePage({
+  searchParams,
+}: Readonly<{ searchParams: SearchParams }>) {
+  const params = await searchParams
+  const payload = await getPayload({ config: await config })
+
+  const [{ docs: categories }, { docs: tags }, { docs: folders }] = await Promise.all([
+    payload.find({ collection: 'categories', limit: 500, sort: 'name' }),
+    payload.find({ collection: 'tags', limit: 500, sort: 'name' }),
+    payload.find({ collection: 'folders', limit: 500, sort: 'name' }),
+  ])
+
+  const and: Where[] = [{ status: { equals: 'published' } }]
+
+  const activeCategory = params.category
+    ? categories.find((c) => c.slug === params.category)
+    : null
+  const activeTag = params.tag ? tags.find((t) => t.slug === params.tag) : null
+  const activeFolder = params.folder ? folders.find((f) => f.slug === params.folder) : null
+
+  if (activeCategory) and.push({ category: { equals: activeCategory.id } })
+  if (activeTag) and.push({ tags: { contains: activeTag.id } })
+  if (activeFolder) and.push({ folder: { equals: activeFolder.id } })
 
   const { docs: posts } = await payload.find({
     collection: 'posts',
-    where: {
-      status: {
-        equals: 'published',
-      },
-    },
-    limit: 10,
-    sort: '-updatedAt',
+    where: { and },
+    depth: 1,
+    limit: 100,
+    sort: 'sortOrder',
   })
 
-  return (
-    <div className="home">
-      <div className="content">
-        <p className="eyebrow">Payload Docs Update PoC</p>
-        {!user || !('email' in user) ? (
-          <h1>Published posts</h1>
-        ) : (
-          <h1>Welcome back, {user.email}</h1>
-        )}
-        <p className="lede">
-          A minimal Payload + Next.js app used to demo AI-assisted documentation updates on
-          code changes.
-        </p>
-        <div className="links">
-          <a className="admin" href={payloadConfig.routes.admin}>
-            Admin panel
-          </a>
-          <a className="docs" href="/docs">
-            Project docs
-          </a>
-        </div>
+  const hasFilters = Boolean(activeCategory || activeTag || activeFolder)
 
-        <ul className="posts">
-          {posts.length === 0 ? (
-            <li className="empty">No published posts yet. Create one in the admin panel.</li>
-          ) : (
-            posts.map((post) => (
+  return (
+    <div className="page">
+      <p className="eyebrow">Documentation</p>
+      <h1>Browse articles</h1>
+      <p className="lede">
+        Use the header filters to narrow results, or search to jump to an article. The sidebar
+        always shows the full library.
+      </p>
+
+      {hasFilters ? (
+        <div className="active-filters">
+          <span className="filter-label">Active</span>
+          {activeCategory ? (
+            <span className="pill category active">{activeCategory.name}</span>
+          ) : null}
+          {activeTag ? <span className="pill tag active">{activeTag.name}</span> : null}
+          {activeFolder ? <span className="pill active">{activeFolder.name}</span> : null}
+          <Link className="filter-clear-link" href="/">
+            Clear all
+          </Link>
+        </div>
+      ) : null}
+
+      <ul className="posts">
+        {posts.length === 0 ? (
+          <li className="empty">No published posts match these filters.</li>
+        ) : (
+          posts.map((post) => {
+            const category =
+              post.category && typeof post.category === 'object' ? post.category : null
+            const folder = post.folder && typeof post.folder === 'object' ? post.folder : null
+            return (
               <li key={post.id}>
-                <strong>{post.title}</strong>
+                <Link href={`/posts/${post.slug}`}>{post.title}</Link>
+                <div className="post-meta">
+                  {folder ? <span className="pill">{folder.name}</span> : null}
+                  {category ? <span className="pill category">{category.name}</span> : null}
+                  {post.summary ? <span className="post-summary">{post.summary}</span> : null}
+                </div>
               </li>
-            ))
-          )}
-        </ul>
-      </div>
+            )
+          })
+        )}
+      </ul>
     </div>
   )
 }

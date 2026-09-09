@@ -1,6 +1,9 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
+import { chatCompletion } from './openai.ts'
+import type { SelectedDoc } from './select.ts'
+
 export type GeneratedFile = {
   path: string
   content: string
@@ -27,42 +30,13 @@ export function parseFileBlocks(raw: string): GeneratedFile[] {
 }
 
 export async function generateWithOpenAI(prompt: string): Promise<GenerateResult> {
-  const apiKey = process.env.OPENAI_API_KEY
-  if (!apiKey) {
-    throw new Error('OPENAI_API_KEY is not set')
-  }
-
-  const model = process.env.OPENAI_MODEL || 'gpt-4o-mini'
-
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model,
-      temperature: 0.2,
-      messages: [
-        {
-          role: 'system',
-          content:
-            'You update markdown documentation to match code changes. Follow the output format exactly.',
-        },
-        { role: 'user', content: prompt },
-      ],
-    }),
+  const raw = await chatCompletion({
+    system:
+      'You update markdown documentation to match code changes. Follow the output format exactly.',
+    user: prompt,
+    temperature: 0.2,
   })
 
-  if (!response.ok) {
-    const body = await response.text()
-    throw new Error(`OpenAI API error ${response.status}: ${body}`)
-  }
-
-  const data = (await response.json()) as {
-    choices?: Array<{ message?: { content?: string } }>
-  }
-  const raw = data.choices?.[0]?.message?.content || ''
   const files = parseFileBlocks(raw)
   const summary =
     raw
@@ -97,4 +71,35 @@ export function writeSuggestions(
   }
 
   return { suggestionsDir, rawPath, written }
+}
+
+export function writeSelectionArtifact(
+  outputDir: string,
+  selection: {
+    method: string
+    docs: SelectedDoc[]
+    symbols: string[]
+    agentRaw?: string
+  },
+): string {
+  const selectionPath = path.join(outputDir, 'selection.json')
+  fs.writeFileSync(
+    selectionPath,
+    JSON.stringify(
+      {
+        method: selection.method,
+        docs: selection.docs,
+        symbols: selection.symbols,
+      },
+      null,
+      2,
+    ),
+    'utf8',
+  )
+
+  if (selection.agentRaw) {
+    fs.writeFileSync(path.join(outputDir, 'selection-agent.md'), selection.agentRaw, 'utf8')
+  }
+
+  return selectionPath
 }

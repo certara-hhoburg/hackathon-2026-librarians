@@ -8,7 +8,8 @@ on:
       - 'next.config.ts'
       - 'package.json'
       - '.env.example'
-      - 'src/payload.config.ts'
+      - 'docs/**'
+      - 'scripts/docs-update/**'
 
 permissions:
   contents: read
@@ -34,20 +35,26 @@ jobs:
         env:
           NPM_CONFIG_REGISTRY: https://registry.npmjs.org
 
-      - name: Build docs-update artifacts
+      - name: Triage docs + build artifacts
         id: docs
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          OPENAI_MODEL: ${{ vars.OPENAI_MODEL || 'gpt-4o-mini' }}
+          OPENAI_MODEL: ${{ vars.OPENAI_MODEL }}
           CI: true
         run: |
+          export OPENAI_MODEL="${OPENAI_MODEL:-gpt-4o-mini}"
           ARGS=(--base "origin/${{ github.base_ref }}")
+
           if [ -n "$OPENAI_API_KEY" ]; then
+            # Agent select + generate suggestions (CI implies --apply when key present)
             ARGS+=(--apply)
-            echo "mode=apply" >> "$GITHUB_OUTPUT"
+            echo "mode=agent-apply" >> "$GITHUB_OUTPUT"
+            echo "Triage agent enabled (OPENAI_API_KEY present)"
           else
-            echo "mode=prompt" >> "$GITHUB_OUTPUT"
+            echo "mode=heuristic" >> "$GITHUB_OUTPUT"
+            echo "::warning::OPENAI_API_KEY secret not set — using heuristic triage only."
           fi
+
           npm run docs:update -- "${ARGS[@]}"
 
       - name: Upload artifacts

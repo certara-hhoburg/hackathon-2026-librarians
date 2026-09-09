@@ -1,9 +1,21 @@
+---
+covers:
+  - package.json
+  - .env.example
+  - next.config.ts
+  - next.config.js
+  - next.config.mjs
+  - netlify.toml
+  - src/payload.config.ts
+---
+
 # Local setup
 
 ## Requirements
 
 - Node.js 20.9+ (22 LTS recommended)
 - npm
+- A PostgreSQL database (Supabase recommended)
 
 ## Install
 
@@ -13,15 +25,16 @@ npm install
 npm run dev
 ```
 
-SQLite creates `payload.db` on first boot. No Docker required.
+Fill in `DATABASE_URI` and `PAYLOAD_SECRET` before starting. Payload creates the schema on first connection.
 
 ## Environment
 
 | Variable | Purpose |
 |----------|---------|
-| `DATABASE_URI` | SQLite file URL, e.g. `file:./payload.db` |
+| `DATABASE_URI` | Postgres URI from Supabase (use the pooler for Netlify) |
 | `PAYLOAD_SECRET` | Payload encryption/signing secret |
-| `OPENAI_API_KEY` | Optional. Enables AI doc generation (`docs:update --apply`) |
+| `S3_BUCKET` / `S3_ENDPOINT` / `S3_ACCESS_KEY_ID` / `S3_SECRET_ACCESS_KEY` / `S3_REGION` | Supabase Storage S3 API (required for media on Netlify) |
+| `OPENAI_API_KEY` | Optional. Enables the docs triage agent + `--apply` generation |
 | `OPENAI_MODEL` | Optional. Defaults to `gpt-4o-mini` |
 
 ## Scripts
@@ -32,13 +45,13 @@ SQLite creates `payload.db` on first boot. No Docker required.
 | `npm run build` / `npm start` | Production build and serve |
 | `npm run generate:types` | Regenerate `src/payload-types.ts` |
 | `npm run generate:importmap` | Regenerate admin import map |
-| `npm run docs:update` | Build a docs-update prompt from git diffs |
-| `npm run docs:update -- --apply` | Same, then call OpenAI if `OPENAI_API_KEY` is set |
+| `npm run docs:update` | Triage docs from git diffs (agent if key set) |
+| `npm run docs:update -- --apply` | Also generate suggested markdown updates |
 
-## Demo change
+## Docs-update check
 
 To exercise the docs Action:
 
-1. Add a field to `src/collections/Posts.ts` (for example `summary`).
-2. Open a PR (or run `npm run docs:update -- --base origin/main`).
-3. Expect `docs/collections/posts.md` to be mapped and a prompt (or AI suggestion) to appear.
+1. Change a covered source file (for example `src/collections/Posts.ts`).
+2. Open a PR (or run `npm run docs:update -- --base HEAD`).
+3. Expect a selection for the matching page under `docs/` and a PR comment when the workflow runs.
