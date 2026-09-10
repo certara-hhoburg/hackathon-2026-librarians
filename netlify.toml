@@ -4,6 +4,9 @@
 
 [build.environment]
   NODE_VERSION = "22"
+  # Bucket/region/endpoint are not secrets; omit so the scanner does not fail on
+  # common strings like "media" that also appear in .gitignore / docs.
+  SECRETS_SCAN_OMIT_KEYS = "S3_BUCKET,S3_REGION,S3_ENDPOINT"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"

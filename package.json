@@ -24,7 +24,7 @@
     "cross-env": "^7.0.3",
     "dotenv": "^16.4.7",
     "graphql": "^16.8.1",
-    "next": "15.4.7",
+    "next": "^15.5.24",
     "payload": "3.88.0",
     "react": "19.1.0",
     "react-dom": "19.1.0",
@@ -35,7 +35,7 @@
     "@types/react": "19.1.8",
     "@types/react-dom": "19.1.6",
     "eslint": "^9.16.0",
-    "eslint-config-next": "15.4.7",
+    "eslint-config-next": "^15.5.24",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2"
   },

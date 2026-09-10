@@ -60,7 +60,7 @@ On first boot, Payload creates the schema. Create the first user in admin (that 
 
 1. Create a public bucket named `media` (or match `S3_BUCKET`).
 2. Project Settings → Storage → **S3 access keys** → create credentials.
-3. Set `S3_ENDPOINT` to `https://<project-ref>.supabase.co/storage/v1/s3`.
+3. Set `S3_ENDPOINT` to `https://<project-ref>.storage.supabase.co/storage/v1/s3` (use the endpoint shown in Storage → Configuration → S3).
 
 ## Docs update workflow
 
