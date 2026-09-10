@@ -120,7 +120,7 @@ export default async function PostPage({ params }: Readonly<Args>) {
             <a className="heading-anchor" href="#included-guides" aria-label="Link to included-guides">
               #
             </a>
-            Included how-tos
+            Included Articles
           </h2>
           <ul>
             {includes.map((guide) => (
