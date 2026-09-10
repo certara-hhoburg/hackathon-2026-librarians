@@ -97,9 +97,11 @@ export default async function PostPage({ params }: Readonly<Args>) {
   const usedAsStepIn = [...usedAsStepInMap.values()]
 
   const recommendedLearning = (post.recommendedLearning || []).filter(
-    (item) => item?.brand && item?.linkLabel && learningHref(item),
+    (item) => item?.linkLabel && learningHref(item),
   )
   const showLearningRail = recommendedLearning.length > 0
+  const railTitle = (post.relatedRailTitle || '').trim() || 'Recommended learning'
+  const railSubtitle = (post.relatedRailSubtitle || '').trim()
 
   const author =
     post.lastEditedBy && typeof post.lastEditedBy === 'object' ? post.lastEditedBy : null
@@ -207,17 +209,23 @@ export default async function PostPage({ params }: Readonly<Args>) {
         </div>
 
         {showLearningRail ? (
-          <aside className="recommended-learning" aria-label="Recommended learning">
-            <h2 className="recommended-learning-title">Recommended learning</h2>
-            <p className="recommended-learning-for">For {post.title}</p>
+          <aside className="recommended-learning" aria-label={railTitle}>
+            <h2 className="recommended-learning-title">{railTitle}</h2>
+            {railSubtitle ? <p className="recommended-learning-for">{railSubtitle}</p> : null}
             <ul className="recommended-learning-list">
               {recommendedLearning.map((item, index) => {
                 const href = learningHref(item)!
                 const external = href.startsWith('http')
+                const brand = (item.brand || '').trim()
+                const blurb = (item.blurb || '').trim()
+                const linkOnly = !brand && !blurb
                 return (
-                  <li key={item.id || `${item.brand}-${index}`} className="recommended-learning-item">
-                    <p className="recommended-learning-brand">{item.brand}</p>
-                    {item.blurb ? <p className="recommended-learning-blurb">{item.blurb}</p> : null}
+                  <li
+                    key={item.id || `${brand || item.linkLabel}-${index}`}
+                    className={`recommended-learning-item${linkOnly ? ' is-link-only' : ''}`}
+                  >
+                    {brand ? <p className="recommended-learning-brand">{brand}</p> : null}
+                    {blurb ? <p className="recommended-learning-blurb">{blurb}</p> : null}
                     {external ? (
                       <a href={href} target="_blank" rel="noopener noreferrer">
                         {item.linkLabel}

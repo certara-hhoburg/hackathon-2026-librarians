@@ -171,30 +171,46 @@ export const Posts: CollectionConfig = {
       },
     },
     {
+      name: 'relatedRailTitle',
+      type: 'text',
+      defaultValue: 'Recommended learning',
+      admin: {
+        description:
+          'Heading for the optional right rail (e.g. “Recommended learning” or “Suggested starting points”).',
+      },
+    },
+    {
+      name: 'relatedRailSubtitle',
+      type: 'text',
+      admin: {
+        description:
+          'Optional line under the heading (e.g. “New here? Try these first”). Leave blank to hide.',
+      },
+    },
+    {
       name: 'recommendedLearning',
       type: 'array',
       labels: {
-        singular: 'Learning link',
-        plural: 'Recommended learning',
+        singular: 'Related link',
+        plural: 'Related links',
       },
       admin: {
         description:
-          'Optional right-rail “Recommended learning” cards on the public post page. Leave empty to hide the rail.',
+          'Optional right-rail links on the public post page. Leave empty to hide the rail. Brand is optional—link-only rows work for simple “suggested” lists.',
       },
       fields: [
         {
           name: 'brand',
           type: 'text',
-          required: true,
           admin: {
-            description: 'Source name shown above the link, e.g. “USDM Play”.',
+            description: 'Optional source name above the link, e.g. “USDM Play”. Skip for plain links.',
           },
         },
         {
           name: 'blurb',
           type: 'text',
           admin: {
-            description: 'Short line under the brand, e.g. “Learn CDISC USDM through interactive examples”.',
+            description: 'Optional short line under the brand.',
           },
         },
         {

@@ -275,16 +275,24 @@ export interface Post {
    */
   usedAsStepIn?: (number | Post)[] | null;
   /**
-   * Optional right-rail “Recommended learning” cards on the public post page. Leave empty to hide the rail.
+   * Heading for the optional right rail (e.g. “Recommended learning” or “Suggested starting points”).
+   */
+  relatedRailTitle?: string | null;
+  /**
+   * Optional line under the heading (e.g. “New here? Try these first”). Leave blank to hide.
+   */
+  relatedRailSubtitle?: string | null;
+  /**
+   * Optional right-rail links on the public post page. Leave empty to hide the rail. Brand is optional—link-only rows work for simple “suggested” lists.
    */
   recommendedLearning?:
     | {
         /**
-         * Source name shown above the link, e.g. “USDM Play”.
+         * Optional source name above the link, e.g. “USDM Play”. Skip for plain links.
          */
-        brand: string;
+        brand?: string | null;
         /**
-         * Short line under the brand, e.g. “Learn CDISC USDM through interactive examples”.
+         * Optional short line under the brand.
          */
         blurb?: string | null;
         /**
@@ -491,6 +499,8 @@ export interface PostsSelect<T extends boolean = true> {
   content?: T;
   includes?: T;
   usedAsStepIn?: T;
+  relatedRailTitle?: T;
+  relatedRailSubtitle?: T;
   recommendedLearning?:
     | T
     | {
