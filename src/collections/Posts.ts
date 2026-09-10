@@ -4,6 +4,7 @@ import { BlocksFeature, FixedToolbarFeature, lexicalEditor } from '@payloadcms/r
 import { anyone, isAdminOrEditor } from '../access/roles'
 import { FigmaEmbed } from '../blocks/FigmaEmbed'
 import { RecipeEmbed } from '../blocks/RecipeEmbed'
+import { Steps } from '../blocks/Steps'
 import { slugify } from '../lib/slugify'
 
 export const Posts: CollectionConfig = {
@@ -104,7 +105,7 @@ export const Posts: CollectionConfig = {
           ...defaultFeatures,
           FixedToolbarFeature(),
           BlocksFeature({
-            blocks: [RecipeEmbed, FigmaEmbed],
+            blocks: [RecipeEmbed, FigmaEmbed, Steps],
           }),
         ],
       }),

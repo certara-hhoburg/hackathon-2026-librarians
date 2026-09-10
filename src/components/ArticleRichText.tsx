@@ -21,10 +21,21 @@ type FigmaEmbedFields = {
   height?: number | null
 }
 
+type StepsFields = {
+  blockType: 'steps'
+  heading?: string | null
+  items?: Array<{
+    id?: string
+    title: string
+    description?: string | null
+  }> | null
+}
+
 type NodeTypes =
   | SerializedHeadingNode
   | SerializedBlockNode<RecipeEmbedFields>
   | SerializedBlockNode<FigmaEmbedFields>
+  | SerializedBlockNode<StepsFields>
 
 function postHref(post: Pick<Post, 'slug' | 'id'>, anchor?: string | null): string {
   const base = `/posts/${post.slug || post.id}`
@@ -104,6 +115,32 @@ function FigmaEmbedView({ fields }: { fields: FigmaEmbedFields }) {
   )
 }
 
+function StepsView({ fields }: { fields: StepsFields }) {
+  const items = (fields.items || []).filter((item) => item?.title)
+  if (items.length === 0) return null
+
+  const heading = (fields.heading || '').trim() || 'Steps'
+
+  return (
+    <section className="steps-block">
+      <h2 className="steps-heading">{heading}</h2>
+      <ol className="steps-list">
+        {items.map((item, index) => (
+          <li key={item.id || `${item.title}-${index}`} className="steps-item">
+            <span className="steps-number" aria-hidden>
+              {index + 1}
+            </span>
+            <div className="steps-body">
+              <p className="steps-title">{item.title}</p>
+              {item.description ? <p className="steps-description">{item.description}</p> : null}
+            </div>
+          </li>
+        ))}
+      </ol>
+    </section>
+  )
+}
+
 const jsxConverters: JSXConvertersFunction<NodeTypes> = ({ defaultConverters }) => ({
   ...defaultConverters,
   heading: ({ node, nodesToJSX }) => {
@@ -123,6 +160,7 @@ const jsxConverters: JSXConvertersFunction<NodeTypes> = ({ defaultConverters }) 
   blocks: {
     recipeEmbed: ({ node }) => <RecipeEmbedView fields={node.fields} />,
     figmaEmbed: ({ node }) => <FigmaEmbedView fields={node.fields} />,
+    steps: ({ node }) => <StepsView fields={node.fields} />,
   },
 })
 
