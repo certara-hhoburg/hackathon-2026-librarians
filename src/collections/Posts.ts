@@ -2,6 +2,7 @@ import type { CollectionConfig } from 'payload'
 import { BlocksFeature, FixedToolbarFeature, lexicalEditor } from '@payloadcms/richtext-lexical'
 
 import { anyone, isAdminOrEditor } from '../access/roles'
+import { ConnectedKnowledge } from '../blocks/ConnectedKnowledge'
 import { FigmaEmbed } from '../blocks/FigmaEmbed'
 import { RecipeEmbed } from '../blocks/RecipeEmbed'
 import { Steps } from '../blocks/Steps'
@@ -118,7 +119,7 @@ export const Posts: CollectionConfig = {
           ...defaultFeatures,
           FixedToolbarFeature(),
           BlocksFeature({
-            blocks: [RecipeEmbed, FigmaEmbed, Steps],
+            blocks: [RecipeEmbed, FigmaEmbed, Steps, ConnectedKnowledge],
           }),
         ],
       }),

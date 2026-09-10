@@ -3,6 +3,7 @@ import { type JSXConvertersFunction, RichText as LexicalRichText } from '@payloa
 import Link from 'next/link'
 import React from 'react'
 
+import { ConnectedKnowledgeCards, type KnowledgeCardItem } from '@/components/ConnectedKnowledgeCards'
 import { toFigmaEmbedSrc } from '@/lib/figma'
 import { lexicalPlainText, slugify } from '@/lib/slugify'
 import type { Category, Post } from '@/payload-types'
@@ -31,11 +32,18 @@ type StepsFields = {
   }> | null
 }
 
+type ConnectedKnowledgeFields = {
+  blockType: 'connectedKnowledge'
+  heading?: string | null
+  items?: KnowledgeCardItem[] | null
+}
+
 type NodeTypes =
   | SerializedHeadingNode
   | SerializedBlockNode<RecipeEmbedFields>
   | SerializedBlockNode<FigmaEmbedFields>
   | SerializedBlockNode<StepsFields>
+  | SerializedBlockNode<ConnectedKnowledgeFields>
 
 function postHref(post: Pick<Post, 'slug' | 'id'>, anchor?: string | null): string {
   const base = `/posts/${post.slug || post.id}`
@@ -176,6 +184,9 @@ const jsxConverters: JSXConvertersFunction<NodeTypes> = ({ defaultConverters }) 
     recipeEmbed: ({ node }) => <RecipeEmbedView fields={node.fields} />,
     figmaEmbed: ({ node }) => <FigmaEmbedView fields={node.fields} />,
     steps: ({ node }) => <StepsView fields={node.fields} />,
+    connectedKnowledge: ({ node }) => (
+      <ConnectedKnowledgeCards heading={node.fields.heading} items={node.fields.items || []} />
+    ),
   },
 })
 

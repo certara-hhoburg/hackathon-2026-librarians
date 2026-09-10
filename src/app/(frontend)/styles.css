@@ -901,7 +901,10 @@ h1 {
 .payload-richtext > .figma-embed:first-child,
 .body > .steps-block:first-child,
 .body > div > .steps-block:first-child,
-.payload-richtext > .steps-block:first-child {
+.payload-richtext > .steps-block:first-child,
+.body > .knowledge-block:first-child,
+.body > div > .knowledge-block:first-child,
+.payload-richtext > .knowledge-block:first-child {
   margin-top: 0;
 }
 
@@ -1076,6 +1079,135 @@ h1 {
   color: var(--accent);
   text-decoration: underline;
   text-underline-offset: 2px;
+}
+
+.knowledge-block {
+  margin: 1rem 0 0.75rem;
+}
+
+.knowledge-heading {
+  margin: 0 0 0.65rem;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--fg);
+}
+
+.knowledge-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.knowledge-card,
+.knowledge-card-hit {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+  width: 100%;
+  text-align: left;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--panel);
+  color: inherit;
+  text-decoration: none;
+  font: inherit;
+  cursor: pointer;
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--fg) 5%, transparent);
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.15s ease,
+    background-color 0.15s ease;
+}
+
+a.knowledge-card:hover,
+button.knowledge-card-hit:hover {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--fg) 10%, transparent);
+  transform: translateY(-1px);
+  background: color-mix(in srgb, var(--panel) 88%, var(--accent));
+}
+
+.knowledge-card.missing {
+  cursor: default;
+  opacity: 0.75;
+}
+
+.knowledge-card.expand {
+  display: block;
+  padding: 0;
+  overflow: hidden;
+}
+
+.knowledge-card.expand .knowledge-card-hit {
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+}
+
+.knowledge-card.expand .knowledge-card-hit:hover {
+  transform: none;
+  background: color-mix(in srgb, var(--panel) 88%, var(--accent));
+}
+
+.knowledge-card-icon {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  color: var(--accent);
+}
+
+.knowledge-card-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.knowledge-card-title {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--fg);
+  line-height: 1.35;
+}
+
+.knowledge-card-desc {
+  color: var(--muted);
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.knowledge-card-action {
+  margin-top: 0.2rem;
+  color: var(--accent);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.knowledge-card-expand-body {
+  padding: 0 1rem 0.9rem 3.7rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.45;
+  border-top: 1px solid var(--border);
+}
+
+.knowledge-card-expand-body p {
+  margin: 0.65rem 0 0;
+}
+
+.knowledge-card-expand-body a {
+  color: var(--accent);
 }
 
 .includes {
