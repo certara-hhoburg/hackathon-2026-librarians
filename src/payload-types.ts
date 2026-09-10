@@ -274,6 +274,34 @@ export interface Post {
    * Optional. Larger guides that use this procedure (e.g. via a Recipe embed). Also auto-filled on the public page from posts that list this one under Includes.
    */
   usedAsStepIn?: (number | Post)[] | null;
+  /**
+   * Optional right-rail “Recommended learning” cards on the public post page. Leave empty to hide the rail.
+   */
+  recommendedLearning?:
+    | {
+        /**
+         * Source name shown above the link, e.g. “USDM Play”.
+         */
+        brand: string;
+        /**
+         * Short line under the brand, e.g. “Learn CDISC USDM through interactive examples”.
+         */
+        blurb?: string | null;
+        /**
+         * Clickable link text.
+         */
+        linkLabel: string;
+        /**
+         * External URL (https://…). Use this or Related article.
+         */
+        url?: string | null;
+        /**
+         * Optional internal article instead of an external URL.
+         */
+        relatedPost?: (number | null) | Post;
+        id?: string | null;
+      }[]
+    | null;
   status: 'draft' | 'published';
   /**
    * Automatically set to the user who last saved this post.
@@ -463,6 +491,16 @@ export interface PostsSelect<T extends boolean = true> {
   content?: T;
   includes?: T;
   usedAsStepIn?: T;
+  recommendedLearning?:
+    | T
+    | {
+        brand?: T;
+        blurb?: T;
+        linkLabel?: T;
+        url?: T;
+        relatedPost?: T;
+        id?: T;
+      };
   status?: T;
   lastEditedBy?: T;
   updatedAt?: T;

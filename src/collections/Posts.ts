@@ -161,6 +161,62 @@ export const Posts: CollectionConfig = {
       },
     },
     {
+      name: 'recommendedLearning',
+      type: 'array',
+      labels: {
+        singular: 'Learning link',
+        plural: 'Recommended learning',
+      },
+      admin: {
+        description:
+          'Optional right-rail “Recommended learning” cards on the public post page. Leave empty to hide the rail.',
+      },
+      fields: [
+        {
+          name: 'brand',
+          type: 'text',
+          required: true,
+          admin: {
+            description: 'Source name shown above the link, e.g. “USDM Play”.',
+          },
+        },
+        {
+          name: 'blurb',
+          type: 'text',
+          admin: {
+            description: 'Short line under the brand, e.g. “Learn CDISC USDM through interactive examples”.',
+          },
+        },
+        {
+          name: 'linkLabel',
+          type: 'text',
+          required: true,
+          admin: {
+            description: 'Clickable link text.',
+          },
+        },
+        {
+          name: 'url',
+          type: 'text',
+          admin: {
+            description: 'External URL (https://…). Use this or Related article.',
+          },
+        },
+        {
+          name: 'relatedPost',
+          type: 'relationship',
+          relationTo: 'posts',
+          admin: {
+            description: 'Optional internal article instead of an external URL.',
+          },
+          filterOptions: ({ id }) => {
+            if (!id) return true
+            return { id: { not_equals: id } }
+          },
+        },
+      ],
+    },
+    {
       name: 'status',
       type: 'select',
       defaultValue: 'draft',
