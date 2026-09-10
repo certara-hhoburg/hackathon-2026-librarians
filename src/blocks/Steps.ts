@@ -1,4 +1,12 @@
 import type { Block } from 'payload'
+import {
+  BoldFeature,
+  InlineToolbarFeature,
+  ItalicFeature,
+  LinkFeature,
+  ParagraphFeature,
+  lexicalEditor,
+} from '@payloadcms/richtext-lexical'
 
 /**
  * Numbered how-to steps rendered as cards on the public article page.
@@ -40,9 +48,18 @@ export const Steps: Block = {
         },
         {
           name: 'description',
-          type: 'textarea',
+          type: 'richText',
+          editor: lexicalEditor({
+            features: () => [
+              ParagraphFeature(),
+              BoldFeature(),
+              ItalicFeature(),
+              LinkFeature(),
+              InlineToolbarFeature(),
+            ],
+          }),
           admin: {
-            description: 'Optional supporting detail under the title.',
+            description: 'Optional supporting detail. Use the toolbar to add links.',
           },
         },
       ],

@@ -27,7 +27,7 @@ type StepsFields = {
   items?: Array<{
     id?: string
     title: string
-    description?: string | null
+    description?: Post['content'] | string | null
   }> | null
 }
 
@@ -125,17 +125,32 @@ function StepsView({ fields }: { fields: StepsFields }) {
     <section className="steps-block">
       <h2 className="steps-heading">{heading}</h2>
       <ol className="steps-list">
-        {items.map((item, index) => (
-          <li key={item.id || `${item.title}-${index}`} className="steps-item">
-            <span className="steps-number" aria-hidden>
-              {index + 1}
-            </span>
-            <div className="steps-body">
-              <p className="steps-title">{item.title}</p>
-              {item.description ? <p className="steps-description">{item.description}</p> : null}
-            </div>
-          </li>
-        ))}
+        {items.map((item, index) => {
+          const description = item.description
+          const richDescription =
+            description && typeof description === 'object' && 'root' in description
+              ? description
+              : null
+          const plainDescription = typeof description === 'string' ? description : null
+
+          return (
+            <li key={item.id || `${item.title}-${index}`} className="steps-item">
+              <span className="steps-number" aria-hidden>
+                {index + 1}
+              </span>
+              <div className="steps-body">
+                <p className="steps-title">{item.title}</p>
+                {richDescription ? (
+                  <div className="steps-description">
+                    <LexicalRichText data={richDescription} />
+                  </div>
+                ) : plainDescription ? (
+                  <p className="steps-description">{plainDescription}</p>
+                ) : null}
+              </div>
+            </li>
+          )
+        })}
       </ol>
     </section>
   )

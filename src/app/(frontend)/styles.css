@@ -1048,6 +1048,20 @@ h1 {
   line-height: 1.45;
 }
 
+.steps-description p {
+  margin: 0;
+}
+
+.steps-description p + p {
+  margin-top: 0.35rem;
+}
+
+.steps-description a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 .includes {
   margin-top: 2.5rem;
   padding-top: 1rem;
