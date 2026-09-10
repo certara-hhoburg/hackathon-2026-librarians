@@ -39,9 +39,10 @@ export default buildConfig({
     pool: {
       connectionString: databaseUri,
     },
-    // Keep schema in sync for Netlify/serverless deploys (new fields/tables like recommended learning).
-    // For stricter prod workflows, switch to migrations and set push: false.
-    push: true,
+    // Only push when explicitly enabled. Constant push on Netlify cold starts can lock
+    // the DB and blank the admin list views. Schema was synced; use PAYLOAD_DATABASE_PUSH=true
+    // temporarily after adding fields if needed.
+    push: process.env.PAYLOAD_DATABASE_PUSH === 'true',
   }),
   plugins: [
     s3Storage({

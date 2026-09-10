@@ -14,6 +14,8 @@ export const Posts: CollectionConfig = {
   admin: {
     useAsTitle: 'title',
     defaultColumns: ['title', 'category', 'lastEditedBy', 'status', 'updatedAt'],
+    // List view queries only visible columns (avoids loading huge Lexical content payloads).
+    enableListViewSelectAPI: true,
   },
   access: {
     read: anyone,
@@ -24,8 +26,12 @@ export const Posts: CollectionConfig = {
   hooks: {
     afterRead: [
       ({ doc }) => {
-        if (doc?.content) {
-          doc.content = migrateStepsDescriptionsInContent(doc.content)
+        try {
+          if (doc?.content && typeof doc.content === 'object') {
+            doc.content = migrateStepsDescriptionsInContent(doc.content)
+          }
+        } catch (err) {
+          console.error('Failed to migrate Steps descriptions on read:', err)
         }
         return doc
       },
@@ -36,8 +42,12 @@ export const Posts: CollectionConfig = {
         if (req.user?.id != null) {
           data.lastEditedBy = req.user.id
         }
-        if (data.content) {
-          data.content = migrateStepsDescriptionsInContent(data.content)
+        try {
+          if (data.content) {
+            data.content = migrateStepsDescriptionsInContent(data.content)
+          }
+        } catch (err) {
+          console.error('Failed to migrate Steps descriptions on save:', err)
         }
         return data
       },
