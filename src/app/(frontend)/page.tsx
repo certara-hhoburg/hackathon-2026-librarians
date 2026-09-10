@@ -43,7 +43,6 @@ export default async function HomePage({
 
   return (
     <div className="page">
-      <p className="eyebrow">Documentation</p>
       <h1>Browse articles</h1>
       <p className="lede">
         Use the header filters to narrow results, or search to jump to an article. The sidebar

@@ -44,7 +44,9 @@ On first boot, Payload creates the schema. Create the first user in admin (that 
 | `DATABASE_URI` | Postgres connection string (Supabase) |
 | `PAYLOAD_SECRET` | Encryption / signing secret (`openssl rand -hex 32`) |
 | `S3_*` | Supabase Storage S3 credentials (required on Netlify for uploads) |
-| `OPENAI_API_KEY` | Optional. Enables the docs triage agent |
+| `GEMINI_API_KEY` | Required for header **Ask** mode (free from Google AI Studio) |
+| `GEMINI_MODEL` | Optional. Defaults to `gemini-3.6-flash` |
+| `OPENAI_API_KEY` | Optional. Enables the docs triage agent in CLI / GitHub Actions |
 | `OPENAI_MODEL` | Optional. Defaults to `gpt-4o-mini` |
 
 ## Deploy to Netlify
@@ -65,14 +67,11 @@ On first boot, Payload creates the schema. Create the first user in admin (that 
 ## Docs update workflow
 
 ```bash
-# Heuristic-only (no API key)
 npm run docs:update -- --base HEAD --heuristic-only
 
-# Agent triage
 export OPENAI_API_KEY=sk-...
 npm run docs:update -- --base HEAD
 
-# Also write suggested markdown
 npm run docs:update -- --base HEAD --apply
 ```
 

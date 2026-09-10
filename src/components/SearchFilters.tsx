@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
 
+import { ASK_MAX_QUERY_CHARS } from '@/lib/ask-constants'
 import { fuzzyRank } from '@/lib/fuzzy'
 import type { NavPost } from '@/lib/nav'
 
@@ -129,6 +130,18 @@ function FilterSelect({ label, param, options, value }: FilterSelectProps) {
   )
 }
 
+type AskSource = {
+  title: string
+  slug: string
+  summary?: string | null
+  categoryName?: string | null
+}
+
+type AskResult = {
+  answer: string
+  sources: AskSource[]
+}
+
 type SearchFiltersProps = {
   categories: FilterOption[]
   tags: FilterOption[]
@@ -143,11 +156,16 @@ export function SearchFilters({ categories, tags, folders, posts }: SearchFilter
   const tag = searchParams.get('tag')
   const folder = searchParams.get('folder')
 
+  const [mode, setMode] = useState<'search' | 'ask'>('search')
   const [query, setQuery] = useState('')
   const [open, setOpen] = useState(false)
   const [activeIndex, setActiveIndex] = useState(0)
+  const [askLoading, setAskLoading] = useState(false)
+  const [askError, setAskError] = useState<string | null>(null)
+  const [askResult, setAskResult] = useState<AskResult | null>(null)
   const rootRef = useRef<HTMLDivElement>(null)
   const listId = useId()
+  const askAbortRef = useRef<AbortController | null>(null)
 
   const results = useMemo(
     () =>
@@ -160,29 +178,73 @@ export function SearchFilters({ categories, tags, folders, posts }: SearchFilter
     [posts, query],
   )
 
-  const showDropdown = open && query.trim().length > 0
+  const showSearchDropdown = mode === 'search' && open && query.trim().length > 0
+  const showAskPanel = mode === 'ask' && open && (askLoading || askError || askResult)
 
   useEffect(() => {
     setActiveIndex(0)
   }, [query])
 
   useEffect(() => {
-    if (!showDropdown) return
+    if (!open) return
     const onPointerDown = (event: MouseEvent) => {
       if (!rootRef.current?.contains(event.target as Node)) setOpen(false)
     }
     document.addEventListener('mousedown', onPointerDown)
     return () => document.removeEventListener('mousedown', onPointerDown)
-  }, [showDropdown])
+  }, [open])
+
+  useEffect(() => {
+    return () => askAbortRef.current?.abort()
+  }, [])
 
   const goTo = useCallback(
     (slug: string) => {
       setOpen(false)
       setQuery('')
+      setAskResult(null)
+      setAskError(null)
       router.push(`/posts/${slug}`)
     },
     [router],
   )
+
+  const runAsk = useCallback(async () => {
+    const question = query.trim()
+    if (!question || askLoading) return
+
+    askAbortRef.current?.abort()
+    const controller = new AbortController()
+    askAbortRef.current = controller
+
+    setAskLoading(true)
+    setAskError(null)
+    setAskResult(null)
+    setOpen(true)
+
+    try {
+      const res = await fetch('/api/ask', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question }),
+        signal: controller.signal,
+      })
+      const data = (await res.json()) as { answer?: string; sources?: AskSource[]; error?: string }
+      if (!res.ok) {
+        setAskError(data.error || 'Something went wrong.')
+        return
+      }
+      setAskResult({
+        answer: data.answer || 'No answer was generated.',
+        sources: data.sources || [],
+      })
+    } catch (err) {
+      if ((err as Error).name === 'AbortError') return
+      setAskError('Could not reach the ask service.')
+    } finally {
+      setAskLoading(false)
+    }
+  }, [askLoading, query])
 
   return (
     <div className="header-search-cluster">
@@ -196,28 +258,65 @@ export function SearchFilters({ categories, tags, folders, posts }: SearchFilter
           role="search"
           onSubmit={(e) => {
             e.preventDefault()
+            if (mode === 'ask') {
+              void runAsk()
+              return
+            }
             if (results[activeIndex]) goTo(results[activeIndex].slug)
           }}
         >
+          <div className="search-mode-toggle" role="group" aria-label="Search mode">
+            <button
+              type="button"
+              className={mode === 'search' ? 'active' : ''}
+              onClick={() => {
+                setMode('search')
+                setAskResult(null)
+                setAskError(null)
+              }}
+            >
+              Search
+            </button>
+            <button
+              type="button"
+              className={mode === 'ask' ? 'active' : ''}
+              onClick={() => {
+                setMode('ask')
+                setOpen(Boolean(askResult || askError))
+              }}
+            >
+              Ask
+            </button>
+          </div>
           <label className="sr-only" htmlFor="site-search">
-            Search articles
+            {mode === 'ask' ? 'Ask a question' : 'Search articles'}
           </label>
           <input
             id="site-search"
             type="search"
-            placeholder="Search articles…"
+            placeholder={mode === 'ask' ? 'Ask a question… e.g. What is CDISC?' : 'Search articles…'}
             value={query}
+            maxLength={ASK_MAX_QUERY_CHARS}
             autoComplete="off"
-            aria-autocomplete="list"
-            aria-controls={listId}
-            aria-expanded={showDropdown}
-            onFocus={() => setOpen(true)}
+            aria-autocomplete={mode === 'search' ? 'list' : undefined}
+            aria-controls={mode === 'search' ? listId : undefined}
+            aria-expanded={mode === 'search' ? showSearchDropdown : undefined}
+            onFocus={() => {
+              if (mode === 'search' || askResult || askError || askLoading) setOpen(true)
+            }}
             onChange={(e) => {
-              setQuery(e.target.value)
-              setOpen(true)
+              setQuery(e.target.value.slice(0, ASK_MAX_QUERY_CHARS))
+              if (mode === 'search') setOpen(true)
+              if (mode === 'ask') {
+                setAskResult(null)
+                setAskError(null)
+              }
             }}
             onKeyDown={(e) => {
-              if (!showDropdown) return
+              if (mode !== 'search' || !showSearchDropdown) {
+                if (e.key === 'Escape') setOpen(false)
+                return
+              }
               if (e.key === 'ArrowDown') {
                 e.preventDefault()
                 setActiveIndex((i) => Math.min(i + 1, Math.max(0, results.length - 1)))
@@ -229,8 +328,14 @@ export function SearchFilters({ categories, tags, folders, posts }: SearchFilter
               }
             }}
           />
+          {mode === 'ask' ? (
+            <button type="submit" className="ask-submit" disabled={askLoading || !query.trim()}>
+              {askLoading ? '…' : 'Ask'}
+            </button>
+          ) : null}
         </form>
-        {showDropdown ? (
+
+        {showSearchDropdown ? (
           <div className="search-suggest" role="listbox" id={listId}>
             {results.length === 0 ? (
               <p className="search-suggest-empty">No matching articles</p>
@@ -258,6 +363,40 @@ export function SearchFilters({ categories, tags, folders, posts }: SearchFilter
                 </Link>
               ))
             )}
+          </div>
+        ) : null}
+
+        {showAskPanel ? (
+          <div className="ask-panel" role="region" aria-live="polite" aria-label="Ask answer">
+            {askLoading ? <p className="ask-status">Looking through the library…</p> : null}
+            {askError ? <p className="ask-error">{askError}</p> : null}
+            {askResult ? (
+              <>
+                <p className="ask-answer">{askResult.answer}</p>
+                {askResult.sources.length > 0 ? (
+                  <div className="ask-sources">
+                    <p className="ask-sources-label">Related articles</p>
+                    <ul>
+                      {askResult.sources.map((source) => (
+                        <li key={source.slug}>
+                          <Link
+                            href={`/posts/${source.slug}`}
+                            onClick={() => {
+                              setOpen(false)
+                              setQuery('')
+                              setAskResult(null)
+                            }}
+                          >
+                            {source.title}
+                          </Link>
+                          {source.summary ? <span>{source.summary}</span> : null}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
+              </>
+            ) : null}
           </div>
         ) : null}
       </div>

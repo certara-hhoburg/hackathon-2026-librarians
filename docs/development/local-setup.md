@@ -34,6 +34,8 @@ Fill in `DATABASE_URI` and `PAYLOAD_SECRET` before starting. Payload creates the
 | `DATABASE_URI` | Postgres URI from Supabase (use the pooler for Netlify) |
 | `PAYLOAD_SECRET` | Payload encryption/signing secret |
 | `S3_BUCKET` / `S3_ENDPOINT` / `S3_ACCESS_KEY_ID` / `S3_SECRET_ACCESS_KEY` / `S3_REGION` | Supabase Storage S3 API (required for media on Netlify) |
+| `GEMINI_API_KEY` | Required for header Ask mode (https://aistudio.google.com/apikey) |
+| `GEMINI_MODEL` | Optional. Defaults to `gemini-3.6-flash` |
 | `OPENAI_API_KEY` | Optional. Enables the docs triage agent + `--apply` generation |
 | `OPENAI_MODEL` | Optional. Defaults to `gpt-4o-mini` |
 
