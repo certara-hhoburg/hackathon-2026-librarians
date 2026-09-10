@@ -5,6 +5,7 @@ import { anyone, isAdminOrEditor } from '../access/roles'
 import { FigmaEmbed } from '../blocks/FigmaEmbed'
 import { RecipeEmbed } from '../blocks/RecipeEmbed'
 import { Steps } from '../blocks/Steps'
+import { migrateStepsDescriptionsInContent } from '../lib/lexicalPlain'
 import { slugify } from '../lib/slugify'
 
 export const Posts: CollectionConfig = {
@@ -20,10 +21,22 @@ export const Posts: CollectionConfig = {
     delete: isAdminOrEditor,
   },
   hooks: {
+    afterRead: [
+      ({ doc }) => {
+        if (doc?.content) {
+          doc.content = migrateStepsDescriptionsInContent(doc.content)
+        }
+        return doc
+      },
+    ],
     beforeChange: [
       ({ req, data }) => {
-        if (req.user?.id != null && data) {
+        if (!data) return data
+        if (req.user?.id != null) {
           data.lastEditedBy = req.user.id
+        }
+        if (data.content) {
+          data.content = migrateStepsDescriptionsInContent(data.content)
         }
         return data
       },
