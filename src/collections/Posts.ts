@@ -117,7 +117,25 @@ export const Posts: CollectionConfig = {
       hasMany: true,
       admin: {
         description:
-          'Recipes / guides this page depends on. Shown as related how-tos below the article (in addition to any inline embeds).',
+          'Shorter recipes/guides this page depends on. Those pages will list this one under “Used as a step in”.',
+      },
+      filterOptions: ({ id }) => {
+        if (!id) return true
+        return {
+          id: {
+            not_equals: id,
+          },
+        }
+      },
+    },
+    {
+      name: 'usedAsStepIn',
+      type: 'relationship',
+      relationTo: 'posts',
+      hasMany: true,
+      admin: {
+        description:
+          'Optional. Larger guides that use this procedure (e.g. via a Recipe embed). Also auto-filled on the public page from posts that list this one under Includes.',
       },
       filterOptions: ({ id }) => {
         if (!id) return true

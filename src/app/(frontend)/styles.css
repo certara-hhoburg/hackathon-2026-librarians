@@ -1071,6 +1071,45 @@ h1 {
   font-size: 0.9rem;
 }
 
+.used-as-step-in {
+  margin-top: 2.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+}
+
+.used-as-step-in-list {
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.used-as-step-in-card {
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--panel);
+}
+
+.used-as-step-in-card a {
+  color: var(--fg);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.used-as-step-in-card a:hover {
+  color: var(--accent);
+}
+
+.used-as-step-in-card p {
+  margin: 0.25rem 0 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
 @media (max-width: 860px) {
   .site-body {
     flex-direction: column;

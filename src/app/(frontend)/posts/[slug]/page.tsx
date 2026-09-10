@@ -61,6 +61,29 @@ export default async function PostPage({ params }: Readonly<Args>) {
   })
 
   const includes = (post.includes || []).filter(isPopulatedPost)
+  const manualUsedIn = (post.usedAsStepIn || []).filter(isPopulatedPost)
+
+  const { docs: reverseParents } = await payload.find({
+    collection: 'posts',
+    where: {
+      and: [
+        { status: { equals: 'published' } },
+        { includes: { contains: post.id } },
+        { id: { not_equals: post.id } },
+      ],
+    },
+    depth: 0,
+    limit: 50,
+    sort: 'title',
+  })
+
+  const usedAsStepInMap = new Map<number, Post>()
+  for (const parent of [...manualUsedIn, ...reverseParents]) {
+    if (parent.status && parent.status !== 'published') continue
+    usedAsStepInMap.set(parent.id, parent)
+  }
+  const usedAsStepIn = [...usedAsStepInMap.values()]
+
   const author =
     post.lastEditedBy && typeof post.lastEditedBy === 'object' ? post.lastEditedBy : null
   const authorName =
@@ -127,6 +150,28 @@ export default async function PostPage({ params }: Readonly<Args>) {
               <li key={guide.id}>
                 <Link href={`/posts/${guide.slug}`}>{guide.title}</Link>
                 {guide.summary ? <p>{guide.summary}</p> : null}
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      {usedAsStepIn.length > 0 ? (
+        <section className="used-as-step-in">
+          <h2 id="used-as-step-in" className="anchored-heading">
+            <a className="heading-anchor" href="#used-as-step-in" aria-label="Link to used-as-step-in">
+              #
+            </a>
+            Used as a step in
+          </h2>
+          <ul className="used-as-step-in-list">
+            {usedAsStepIn.map((parent) => (
+              <li key={parent.id} className="used-as-step-in-card">
+                <Link href={`/posts/${parent.slug}`}>{parent.title}</Link>
+                <p>
+                  {parent.summary?.trim() ||
+                    'This procedure is embedded there rather than duplicated.'}
+                </p>
               </li>
             ))}
           </ul>

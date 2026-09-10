@@ -267,9 +267,13 @@ export interface Post {
     [k: string]: unknown;
   } | null;
   /**
-   * Recipes / guides this page depends on. Shown as related how-tos below the article (in addition to any inline embeds).
+   * Shorter recipes/guides this page depends on. Those pages will list this one under “Used as a step in”.
    */
   includes?: (number | Post)[] | null;
+  /**
+   * Optional. Larger guides that use this procedure (e.g. via a Recipe embed). Also auto-filled on the public page from posts that list this one under Includes.
+   */
+  usedAsStepIn?: (number | Post)[] | null;
   status: 'draft' | 'published';
   /**
    * Automatically set to the user who last saved this post.
@@ -458,6 +462,7 @@ export interface PostsSelect<T extends boolean = true> {
   sortOrder?: T;
   content?: T;
   includes?: T;
+  usedAsStepIn?: T;
   status?: T;
   lastEditedBy?: T;
   updatedAt?: T;
