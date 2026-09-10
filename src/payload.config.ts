@@ -39,6 +39,9 @@ export default buildConfig({
     pool: {
       connectionString: databaseUri,
     },
+    // Keep schema in sync for Netlify/serverless deploys (new fields/tables like recommended learning).
+    // For stricter prod workflows, switch to migrations and set push: false.
+    push: true,
   }),
   plugins: [
     s3Storage({

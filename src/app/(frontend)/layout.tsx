@@ -12,6 +12,9 @@ export const metadata = {
   title: 'Certara Library',
 }
 
+// CMS-backed pages — always render on request (avoids stale static builds / schema race on deploy).
+export const dynamic = 'force-dynamic'
+
 async function loadChromeData() {
   const payload = await getPayload({ config: await config })
   const [{ docs: folders }, { docs: posts }, { docs: categories }, { docs: tags }] =
